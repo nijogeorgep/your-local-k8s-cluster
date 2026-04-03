@@ -40,20 +40,28 @@ if ! command -v helm &> /dev/null; then
     exit 1
 fi
 
-# Add Kargo Helm repository
-echo -e "\033[1;33mAdding Kargo Helm repository...\033[0m"
-helm repo add kargo https://charts.kargo.io
-helm repo update
+# Generate admin credentials
+ADMIN_PASSWORD="${KARGO_ADMIN_PASSWORD:-admin}"
+ADMIN_HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw('$ADMIN_PASSWORD'.encode(), bcrypt.gensalt(10)).decode())" 2>/dev/null \
+    || htpasswd -bnBC 10 "" "$ADMIN_PASSWORD" 2>/dev/null | tr -d ':\n' | sed 's/^!//')
+TOKEN_KEY=$(openssl rand -hex 32)
+
+if [[ -z "$ADMIN_HASH" ]]; then
+    echo -e "\033[1;31mERROR: Could not generate bcrypt hash. Install python3-bcrypt or apache2-utils.\033[0m"
+    exit 1
+fi
 
 # Create namespace
 echo -e "\033[1;33mCreating kargo namespace...\033[0m"
 kubectl create namespace kargo --dry-run=client -o yaml | kubectl apply -f -
 
-# Install Kargo using Helm
-echo -e "\033[1;33mInstalling Kargo via Helm...\033[0m"
-helm install kargo kargo/kargo \
+# Install Kargo using OCI Helm chart (charts.kargo.io is no longer valid)
+echo -e "\033[1;33mInstalling Kargo via OCI Helm chart...\033[0m"
+helm install kargo oci://ghcr.io/akuity/kargo-charts/kargo \
     --namespace kargo \
     --version "$VERSION" \
+    --set api.adminAccount.passwordHash="$ADMIN_HASH" \
+    --set api.adminAccount.tokenSigningKey="$TOKEN_KEY" \
     --wait \
     --timeout 10m
 
@@ -61,20 +69,15 @@ helm install kargo kargo/kargo \
 echo -e "\033[1;33mWaiting for Kargo pods to be ready...\033[0m"
 kubectl wait --for=condition=Ready pods --all -n kargo --timeout=300s
 
-# Try to get admin password
-ADMIN_PASSWORD=$(kubectl -n kargo get secret kargo-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d)
-
 echo -e "\n\033[1;32mKargo installed successfully!\033[0m"
+echo -e "\033[1;36mUsername:\033[0m admin"
+echo -e "\033[1;36mPassword:\033[0m $ADMIN_PASSWORD"
 
-if [[ -n "$ADMIN_PASSWORD" ]]; then
-    echo -e "\033[1;36mUsername:\033[0m admin"
-    echo -e "\033[1;36mPassword:\033[0m $ADMIN_PASSWORD"
-    
-    # Save credentials
-    CREDS_FILE="./credentials/kargo-credentials.txt"
-    mkdir -p ./credentials
-    
-    cat > "$CREDS_FILE" << EOF
+# Save credentials
+CREDS_FILE="./credentials/kargo-credentials.txt"
+mkdir -p ./credentials
+
+cat > "$CREDS_FILE" << EOF
 Kargo Credentials
 =================
 URL: http://localhost:8081 (after port-forward)
@@ -84,9 +87,8 @@ Password: $ADMIN_PASSWORD
 Port-forward command:
 kubectl port-forward svc/kargo-api -n kargo 8081:443
 EOF
-    
-    echo -e "\n\033[1;32mCredentials saved to: $CREDS_FILE\033[0m"
-fi
+
+echo -e "\n\033[1;32mCredentials saved to: $CREDS_FILE\033[0m"
 
 echo -e "\n\033[1;33mTo access Kargo UI, run:\033[0m"
 echo -e "  kubectl port-forward svc/kargo-api -n kargo 8081:443"
