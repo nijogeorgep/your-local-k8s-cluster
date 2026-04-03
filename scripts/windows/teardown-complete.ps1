@@ -129,7 +129,7 @@ Write-Host "`n══════════════════════
 Write-Host "Step 4/5: Cleaning Tools Directory" -ForegroundColor Cyan
 Write-Host "════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$toolsDir = "$PSScriptRoot\..\tools"
+$toolsDir = "$PSScriptRoot\..\..\tools"
 if (Test-Path $toolsDir) {
     Write-Host "Removing tools directory..." -ForegroundColor Yellow
     try {
@@ -147,7 +147,7 @@ Write-Host "`n══════════════════════
 Write-Host "Step 5/5: Cleaning Credentials Directory" -ForegroundColor Cyan
 Write-Host "════════════════════════════════════════════════" -ForegroundColor Cyan
 
-$credsDir = "$PSScriptRoot\..\credentials"
+$credsDir = "$PSScriptRoot\..\..\credentials"
 if (Test-Path $credsDir) {
     Write-Host "Removing credentials directory..." -ForegroundColor Yellow
     try {

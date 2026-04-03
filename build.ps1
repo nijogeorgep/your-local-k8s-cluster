@@ -66,37 +66,37 @@ switch ($Target) {
         Show-Help
     }
     'install' {
-        & "$PSScriptRoot\scripts\install-all.ps1"
+        & "$PSScriptRoot\scripts\windows\install-all.ps1"
     }
     'install-quiet' {
-        & "$PSScriptRoot\scripts\install-all.ps1" -NonInteractive
+        & "$PSScriptRoot\scripts\windows\install-all.ps1" -NonInteractive
     }
     'install-cert-manager' {
-        & "$PSScriptRoot\scripts\install-cert-manager.ps1"
+        & "$PSScriptRoot\scripts\windows\install-cert-manager.ps1"
     }
     'install-istio' {
-        & "$PSScriptRoot\scripts\install-istio.ps1"
+        & "$PSScriptRoot\scripts\windows\install-istio.ps1"
     }
     'install-argocd' {
-        & "$PSScriptRoot\scripts\install-argocd.ps1"
+        & "$PSScriptRoot\scripts\windows\install-argocd.ps1"
     }
     'install-rollouts' {
-        & "$PSScriptRoot\scripts\install-argo-rollouts.ps1"
+        & "$PSScriptRoot\scripts\windows\install-argo-rollouts.ps1"
     }
     'install-kargo' {
-        & "$PSScriptRoot\scripts\install-kargo.ps1"
+        & "$PSScriptRoot\scripts\windows\install-kargo.ps1"
     }
     'setup-infrastructure' {
-        & "$PSScriptRoot\scripts\setup-infrastructure.ps1"
+        & "$PSScriptRoot\scripts\windows\setup-infrastructure.ps1"
     }
     'install-dashboard' {
-        & "$PSScriptRoot\scripts\install-dashboard.ps1"
+        & "$PSScriptRoot\scripts\windows\install-dashboard.ps1"
     }
     'verify' {
-        & "$PSScriptRoot\scripts\verify-cluster.ps1"
+        & "$PSScriptRoot\scripts\windows\verify-cluster.ps1"
     }
     'status' {
-        & "$PSScriptRoot\scripts\verify-cluster.ps1"
+        & "$PSScriptRoot\scripts\windows\verify-cluster.ps1"
     }
     'create-cluster' {
         Write-Host "Creating kind cluster: my-local-cluster" -ForegroundColor Cyan
@@ -107,7 +107,7 @@ switch ($Target) {
         kind delete cluster --name my-local-cluster
     }
     'uninstall' {
-        & "$PSScriptRoot\scripts\uninstall-all.ps1"
+        & "$PSScriptRoot\scripts\windows\uninstall-all.ps1"
     }
     'clean' {
         Write-Host "Cleaning up tools and credentials directories..." -ForegroundColor Yellow
@@ -162,10 +162,10 @@ switch ($Target) {
         kind create cluster --name my-local-cluster
         
         Write-Host "`n2. Installing components..." -ForegroundColor Yellow
-        & "$PSScriptRoot\scripts\install-all.ps1" -NonInteractive
-        
+        & "$PSScriptRoot\scripts\windows\install-all.ps1" -NonInteractive
+
         Write-Host "`n3. Verifying installation..." -ForegroundColor Yellow
-        & "$PSScriptRoot\scripts\verify-cluster.ps1"
+        & "$PSScriptRoot\scripts\windows\verify-cluster.ps1"
         
         Write-Host "`n=== Setup Complete! ===" -ForegroundColor Green
         Write-Host "Your local Kubernetes cluster is ready." -ForegroundColor Green
@@ -180,7 +180,7 @@ switch ($Target) {
         }
         
         Write-Host "`n1. Uninstalling components..." -ForegroundColor Yellow
-        & "$PSScriptRoot\scripts\uninstall-all.ps1" -Force
+        & "$PSScriptRoot\scripts\windows\uninstall-all.ps1" -Force
         
         Write-Host "`n2. Deleting cluster..." -ForegroundColor Yellow
         kind delete cluster --name my-local-cluster
