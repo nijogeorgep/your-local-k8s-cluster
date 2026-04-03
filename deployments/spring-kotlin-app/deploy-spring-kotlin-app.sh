@@ -272,7 +272,7 @@ install_application() {
         fi
 
         log_info "Upgrading Helm release: ${RELEASE_NAME}"
-        if helm upgrade "$RELEASE_NAME" . "${helm_args[@]}"; then
+        if helm upgrade "$RELEASE_NAME" . "${helm_args[@]}" --force-conflicts; then
             log_success "Application upgraded successfully"
         else
             popd > /dev/null

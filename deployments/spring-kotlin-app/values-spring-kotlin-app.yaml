@@ -1,5 +1,5 @@
 # Deployment Configuration for Spring Kotlin Application
-# Image: nijogeorgep/spring-kotlin-app:2c5c983
+# Image: nijogeorgep/spring-kotlin-app:0c89fdd
 #
 # This configuration enables:
 # - Argo Rollouts for progressive delivery (canary deployments)
@@ -14,16 +14,16 @@ argo-rollouts:
   enabled: true  # Use Argo Rollouts instead of standard Deployment
   
   # Reference parent chart's ServiceAccount
-  serviceAccountName: spring-kotlin-app-app-template
+  serviceAccountName: spring-kotlin-app-template
   
   # Application image
   image:
-    repository: nijogeorgep/spring-kotlin-app
-    tag: "2c5c983"
+    repository: ghcr.io/nijogeorgep/spring-kotlin-app
+    tag: "0c89fdd"  # Use specific tag for production, "latest" for development
     pullPolicy: IfNotPresent
   
   # Number of replicas
-  replicas: 3
+  replicas: 1
   
   # Service configuration for Argo Rollouts
   service:
@@ -55,18 +55,51 @@ argo-rollouts:
   # Resource requests and limits
   resources:
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 1
+      memory: 4Gi
     limits:
-      cpu: 1000m
-      memory: 1Gi
+      cpu: 2
+      memory: 4Gi
   
   # Environment variables for Spring Boot
   env:
     - name: SPRING_PROFILES_ACTIVE
       value: "kubernetes"
-    - name: JAVA_OPTS
-      value: "-Xmx768m -Xms512m"
+
+    # --- Paketo JVM memory calculator ---
+    # Replaces hardcoded -Xmx/-Xms. The calculator derives heap from the
+    # container memory limit (4Gi) minus headroom, stack, and metaspace.
+    # See: https://paketo.io/docs/howto/java/#configure-the-jvm-at-runtime
+
+    # Reserve 10% of container memory as headroom for the OS / off-heap use
+    - name: BPL_JVM_HEAD_ROOM
+      value: "10"
+
+    # Expected number of user threads; drives stack memory reservation
+    # (each thread gets 1m stack by default → 200 × 1m = 200m)
+    - name: BPL_JVM_THREAD_COUNT
+      value: "200"
+
+    # Estimated loaded-class count; drives metaspace reservation.
+    # Paketo default is 35% of total classes; set explicitly if you know yours.
+    - name: BPL_JVM_LOADED_CLASS_COUNT
+      value: "12000"
+
+    # Proportion of remaining memory (after headroom/stack/metaspace) given
+    # to heap. 0.75 → ~75% heap, ~25% direct/code-cache/misc.
+    - name: BPL_JVM_HEAP_RATIO
+      value: "0.75"
+
+    # Additional non-memory JVM flags (GC tuning, diagnostics, etc.)
+    # Do NOT include -Xmx/-Xms here — let the calculator set them.
+    - name: JAVA_TOOL_OPTIONS
+      value: >-
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp
+        -Dfile.encoding=UTF-8
   
   # Progressive delivery strategy
   strategy:
