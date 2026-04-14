@@ -51,12 +51,12 @@ try {
 
 # Installation sequence
 $tools = @()
-if (-not $SkipCertManager) { $tools += @{Name="cert-manager"; Script=".\scripts\install-cert-manager.ps1"} }
-if (-not $SkipIstio) { $tools += @{Name="Istio"; Script=".\scripts\install-istio.ps1"} }
-if (-not $SkipArgoCD) { $tools += @{Name="ArgoCD"; Script=".\scripts\install-argocd.ps1"} }
-if (-not $SkipArgoRollouts) { $tools += @{Name="Argo Rollouts"; Script=".\scripts\install-argo-rollouts.ps1"} }
-if (-not $SkipKargo) { $tools += @{Name="Kargo"; Script=".\scripts\install-kargo.ps1"} }
-if (-not $SkipDashboard) { $tools += @{Name="Kubernetes Dashboard"; Script=".\scripts\install-dashboard.ps1"} }
+if (-not $SkipCertManager) { $tools += @{Name="cert-manager"; Script="$PSScriptRoot\install-cert-manager.ps1"} }
+if (-not $SkipIstio) { $tools += @{Name="Istio"; Script="$PSScriptRoot\install-istio.ps1"} }
+if (-not $SkipArgoCD) { $tools += @{Name="ArgoCD"; Script="$PSScriptRoot\install-argocd.ps1"} }
+if (-not $SkipArgoRollouts) { $tools += @{Name="Argo Rollouts"; Script="$PSScriptRoot\install-argo-rollouts.ps1"} }
+if (-not $SkipKargo) { $tools += @{Name="Kargo"; Script="$PSScriptRoot\install-kargo.ps1"} }
+if (-not $SkipDashboard) { $tools += @{Name="Kubernetes Dashboard"; Script="$PSScriptRoot\install-dashboard.ps1"} }
 
 $totalTools = $tools.Count
 $current = 0

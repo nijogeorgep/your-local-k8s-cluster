@@ -143,7 +143,10 @@ switch ($Target) {
             & $rollouts dashboard
         } else {
             Write-Host "ERROR: kubectl-argo-rollouts plugin not found." -ForegroundColor Red
-     expose-gateway' {
+            Write-Host "Run '.\build.ps1 install-rollouts' first." -ForegroundColor Yellow
+        }
+    }
+    'expose-gateway' {
         Write-Host "Exposing Istio Ingress Gateway..." -ForegroundColor Cyan
         Write-Host "Access URLs:" -ForegroundColor Yellow
         Write-Host "  ArgoCD:             https://localhost:8443/argocd" -ForegroundColor White
@@ -152,9 +155,6 @@ switch ($Target) {
         Write-Host "  Argo Rollouts:      https://localhost:8443/rollouts" -ForegroundColor White
         Write-Host "`nPress Ctrl+C to stop port-forwarding" -ForegroundColor Yellow
         kubectl port-forward -n istio-system svc/istio-ingressgateway 8443:443 8080:80
-    }
-    '       Write-Host "Run '.\build.ps1 install-rollouts' first." -ForegroundColor Yellow
-        }
     }
     'setup' {
         Write-Host "`n=== Complete Setup Workflow ===" -ForegroundColor Cyan

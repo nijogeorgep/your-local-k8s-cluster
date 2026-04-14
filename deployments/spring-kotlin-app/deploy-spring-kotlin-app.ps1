@@ -40,7 +40,7 @@ $ErrorActionPreference = "Stop"
 # Script directory and paths
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ValuesFile = Join-Path $ScriptDir "values-spring-kotlin-app.yaml"
-$ChartDir = Split-Path -Parent (Split-Path -Parent $ScriptDir)
+$ChartDir = Join-Path (Split-Path -Parent (Split-Path -Parent $ScriptDir)) "helm-charts\app-template"
 
 # Colors for output
 function Write-Info { param($Message) Write-Host "ℹ️  $Message" -ForegroundColor Cyan }

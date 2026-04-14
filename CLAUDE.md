@@ -28,7 +28,6 @@ make install-rollouts
 make install-kargo
 make install-dashboard
 make install-cert-manager
-make setup-infrastructure # SSL certificates + Istio gateway routing
 ```
 
 ### Verification & Status
@@ -39,11 +38,17 @@ make status               # Check status of all components
 
 ### UI Access
 ```bash
-make dashboard            # Port-forward Kubernetes Dashboard
-make argocd-ui            # Port-forward ArgoCD UI
-make kargo-ui             # Port-forward Kargo UI
-make rollouts-ui          # Port-forward Argo Rollouts UI
-make expose-gateway       # Expose Istio gateway (unified access)
+make dashboard            # kubectl proxy → http://localhost:8001/.../kubernetes-dashboard/
+make argocd-ui            # Port-forward ArgoCD UI → https://localhost:8080
+make kargo-ui             # Port-forward Kargo UI → http://localhost:8081
+make rollouts-ui          # Launch Argo Rollouts dashboard (requires plugin in tools/)
+```
+
+Credentials are auto-saved to `credentials/` (git-ignored): `argocd-credentials.txt`, `dashboard-token.txt`.
+
+To apply infrastructure manifests (gateway routing, cert issuers) directly:
+```powershell
+.\scripts\windows\setup-infrastructure.ps1
 ```
 
 ### Helm Chart Operations
@@ -70,7 +75,7 @@ For Linux/macOS, `build.sh` provides equivalent commands: `./build.sh <command>`
 - **Kubernetes Dashboard** — web UI; token auto-saved to `credentials/dashboard-token.txt`
 
 ### Directory Layout
-- `scripts/` — PowerShell (.ps1) automation scripts (primary)
+- `scripts/windows/` — PowerShell (.ps1) automation scripts (primary)
 - `scripts/linux/` — Bash (.sh) equivalents for Linux/macOS
 - `manifests/infrastructure/` — Istio gateway, cert-manager issuers, path-based routing
 - `manifests/examples/` — ArgoCD application and Kargo project examples
@@ -100,7 +105,7 @@ Each subchart is independently enabled/disabled via values (e.g., `argoRollouts.
 - `default` — application workloads (Istio sidecar injection enabled)
 
 ### Infrastructure Routing
-After `make setup-infrastructure`, tools are accessible via the Istio IngressGateway using path-based routing defined in `manifests/infrastructure/tools-routing.yaml`. Credentials are stored in `credentials/` (git-ignored).
+After running `setup-infrastructure.ps1`, tools are accessible via the Istio IngressGateway using path-based routing defined in [manifests/infrastructure/tools-routing.yaml](manifests/infrastructure/tools-routing.yaml).
 
 ## CI/CD
 
@@ -111,8 +116,33 @@ GitHub Actions (`.github/workflows/helm-ci.yml`) triggers on changes to `helm-ch
 
 ## Key Conventions
 
-- PowerShell scripts are the source of truth; Bash scripts in `scripts/linux/` mirror them
-- Installation scripts are idempotent — safe to re-run
+- PowerShell scripts in `scripts/windows/` are the source of truth; `scripts/linux/` mirrors them
+- Installation scripts are idempotent — each checks if already installed and exits early if so
 - Credentials (tokens, passwords) are auto-generated and written to `credentials/` (git-ignored)
 - Chart dependencies must be updated (`make helm-build`) before linting or packaging
 - Kargo uses the newer PromotionTask API (not the legacy Promotion API)
+- `tools/` directory is git-ignored and populated at runtime (istioctl, kubectl-argo-rollouts plugin)
+
+> **Note:** The Makefile references `./scripts/install-all.ps1` but scripts actually live under `./scripts/windows/`. Run scripts directly if `make install` fails.
+
+## Troubleshooting
+
+**Force reinstall a component:**
+```powershell
+.\scripts\windows\uninstall-all.ps1
+.\scripts\windows\install-all.ps1 -NonInteractive
+```
+
+**Pod not ready after install** (all install scripts wait 300s):
+```bash
+kubectl get pods -n <namespace> -w
+kubectl describe pod <pod-name> -n <namespace>
+kubectl logs <pod-name> -n <namespace>
+```
+
+**Port-forward fails:**
+```bash
+kubectl cluster-info          # verify cluster connectivity
+kubectl get svc -n <namespace>
+netstat -ano | findstr :<port> # check port in use (Windows)
+```

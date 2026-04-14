@@ -214,7 +214,7 @@ istio-routing:
 # === KARGO CONFIGURATION ===
 # Multi-environment promotion pipeline with new PromotionTask API
 kargo-config:
-  enabled: true  # Re-enabled with new API
+  enabled: false  # Requires a real git repo URL to configure stages
   
   project:
     name: spring-kotlin-app-project  # Renamed to avoid conflict with app namespace
