@@ -249,7 +249,76 @@ switch ($Target) {
             exit 1
         }
         Write-Host "✓ Kargo config passed" -ForegroundColor Green
-        
+
+        Write-Host "`nTesting global naming without flavor..." -ForegroundColor Yellow
+        $namingOutput = helm template svc $chartPath `
+            --set nameOverride=service `
+            --set "argo-rollouts.enabled=false" `
+            --set global.environment=prod `
+            --set global.region=us-west-2 `
+            --show-only templates/deployment.yaml 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "✗ Global naming (no flavor) template failed!" -ForegroundColor Red
+            exit 1
+        }
+        if (($namingOutput -join "`n") -notmatch "name: service-prod-us-west-2") {
+            Write-Host "✗ Global naming (no flavor): expected 'service-prod-us-west-2' in output" -ForegroundColor Red
+            Write-Host ($namingOutput | Select-String "name:") -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "✓ Global naming without flavor passed (service-prod-us-west-2)" -ForegroundColor Green
+
+        Write-Host "`nTesting global naming with flavor..." -ForegroundColor Yellow
+        $namingFlavorOutput = helm template svc $chartPath `
+            --set nameOverride=service `
+            --set "argo-rollouts.enabled=false" `
+            --set global.environment=staging `
+            --set global.flavor=qa1 `
+            --set global.region=us-west-2 `
+            --show-only templates/deployment.yaml 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "✗ Global naming (with flavor) template failed!" -ForegroundColor Red
+            exit 1
+        }
+        if (($namingFlavorOutput -join "`n") -notmatch "name: service-staging-qa1-us-west-2") {
+            Write-Host "✗ Global naming (with flavor): expected 'service-staging-qa1-us-west-2' in output" -ForegroundColor Red
+            Write-Host ($namingFlavorOutput | Select-String "name:") -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "✓ Global naming with flavor passed (service-staging-qa1-us-west-2)" -ForegroundColor Green
+
+        Write-Host "`nTesting fullnameOverride naming..." -ForegroundColor Yellow
+        $overrideOutput = helm template svc $chartPath `
+            --set "argo-rollouts.enabled=false" `
+            --set fullnameOverride=my-explicit-name `
+            --show-only templates/deployment.yaml 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "✗ fullnameOverride template failed!" -ForegroundColor Red
+            exit 1
+        }
+        if (($overrideOutput -join "`n") -notmatch "name: my-explicit-name") {
+            Write-Host "✗ fullnameOverride: expected 'my-explicit-name' in output" -ForegroundColor Red
+            Write-Host ($overrideOutput | Select-String "name:") -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "✓ fullnameOverride naming passed (my-explicit-name)" -ForegroundColor Green
+
+        Write-Host "`nTesting test-naming hook renders in global naming mode..." -ForegroundColor Yellow
+        $testNamingOutput = helm template svc $chartPath `
+            --set nameOverride=service `
+            --set global.environment=prod `
+            --set global.region=us-west-2 `
+            --show-only templates/tests/test-naming.yaml 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "✗ test-naming hook render failed!" -ForegroundColor Red
+            exit 1
+        }
+        if (($testNamingOutput -join "`n") -notmatch "service-prod-us-west-2") {
+            Write-Host "✗ test-naming hook: expected 'service-prod-us-west-2' in rendered test" -ForegroundColor Red
+            exit 1
+        }
+        Write-Host "✓ test-naming hook renders correctly" -ForegroundColor Green
+
         Write-Host "`n✓ All template tests passed!" -ForegroundColor Green
     }
     'helm-test' {

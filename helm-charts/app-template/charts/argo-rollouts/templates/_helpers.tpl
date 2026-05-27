@@ -59,9 +59,13 @@ Priority:
 This helper is used to name the Rollout and all related test resources.
 */}}
 {{- define "argo-rollouts.parentFullname" -}}
-{{- if and .Values.global.environment .Values.global.flavor .Values.global.region }}
+{{- if and .Values.global.environment .Values.global.region }}
 {{- $svc := default .Release.Name .Values.nameOverride }}
+{{- if .Values.global.flavor }}
 {{- printf "%s-%s-%s-%s" $svc .Values.global.environment .Values.global.flavor .Values.global.region | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s-%s" $svc .Values.global.environment .Values.global.region | trunc 63 | trimSuffix "-" }}
+{{- end }}
 {{- else if .Values.parentFullname -}}
 {{- .Values.parentFullname -}}
 {{- else -}}

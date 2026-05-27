@@ -1,0 +1,138 @@
+{{/*
+  test-naming.yaml
+  Verifies that the Deployment (or Rollout) and Service are created with the
+  correct name under all three naming modes:
+
+  1. Standard mode  — name follows Helm release/chart logic
+  2. fullnameOverride — name taken verbatim from fullnameOverride
+  3. Global naming   — name composed as <service>-<env>-<flavor>-<region>
+     (requires global.environment + global.flavor + global.region)
+
+  The expected name is computed by the same app-template.fullname helper,
+  so this test validates the deployed resources match that computation.
+*/}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "app-template.fullname" . }}-test-naming
+  labels:
+    {{- include "app-template.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  serviceAccountName: {{ include "app-template.fullname" . }}-naming-test
+  containers:
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command:
+    - /bin/sh
+    - -c
+    - |
+      EXPECTED_NAME="{{ include "app-template.fullname" . }}"
+      echo "=== Naming pattern test ==="
+      echo "Expected resource name: $EXPECTED_NAME"
+
+      {{- with .Values.global }}
+      {{- if and .environment .region }}
+      echo "Mode: global naming"
+      {{- if .flavor }}
+      EXPECTED_PATTERN="{{ $.Values.nameOverride | default $.Release.Name }}-{{ .environment }}-{{ .flavor }}-{{ .region }}"
+      {{- else }}
+      EXPECTED_PATTERN="{{ $.Values.nameOverride | default $.Release.Name }}-{{ .environment }}-{{ .region }}"
+      {{- end }}
+      if [ "$EXPECTED_NAME" != "$EXPECTED_PATTERN" ]; then
+        echo "✗ Name mismatch: got '$EXPECTED_NAME', expected '$EXPECTED_PATTERN'"
+        exit 1
+      fi
+      echo "✓ Name matches global naming pattern: $EXPECTED_NAME"
+      {{- end }}
+      {{- end }}
+
+      {{- if index .Values "argo-rollouts" "enabled" }}
+      echo "--- Checking Rollout ---"
+      kubectl get rollout "$EXPECTED_NAME"
+      if [ $? -ne 0 ]; then
+        echo "✗ Rollout '$EXPECTED_NAME' not found"
+        kubectl get rollouts
+        exit 1
+      fi
+      echo "✓ Rollout '$EXPECTED_NAME' exists"
+      {{- else }}
+      echo "--- Checking Deployment ---"
+      kubectl get deployment "$EXPECTED_NAME"
+      if [ $? -ne 0 ]; then
+        echo "✗ Deployment '$EXPECTED_NAME' not found"
+        kubectl get deployments
+        exit 1
+      fi
+      echo "✓ Deployment '$EXPECTED_NAME' exists"
+      {{- end }}
+
+      echo "--- Checking Service ---"
+      kubectl get svc "$EXPECTED_NAME"
+      if [ $? -ne 0 ]; then
+        echo "✗ Service '$EXPECTED_NAME' not found"
+        kubectl get svc
+        exit 1
+      fi
+      echo "✓ Service '$EXPECTED_NAME' exists"
+
+      echo "--- Checking name consistency ---"
+      DEPLOY_NAME=$(kubectl get {{ if index .Values "argo-rollouts" "enabled" }}rollout{{ else }}deployment{{ end }} "$EXPECTED_NAME" -o jsonpath='{.metadata.name}' 2>/dev/null)
+      SVC_NAME=$(kubectl get svc "$EXPECTED_NAME" -o jsonpath='{.metadata.name}' 2>/dev/null)
+      if [ "$DEPLOY_NAME" != "$SVC_NAME" ]; then
+        echo "✗ Name inconsistency: Deployment='$DEPLOY_NAME' Service='$SVC_NAME'"
+        exit 1
+      fi
+      echo "✓ Deployment and Service names are consistent: $DEPLOY_NAME"
+      echo "=== All naming tests passed ==="
+  restartPolicy: Never
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "app-template.fullname" . }}-naming-test
+  labels:
+    {{- include "app-template.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "app-template.fullname" . }}-naming-test
+  labels:
+    {{- include "app-template.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list"]
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "app-template.fullname" . }}-naming-test
+  labels:
+    {{- include "app-template.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "app-template.fullname" . }}-naming-test
+subjects:
+- kind: ServiceAccount
+  name: {{ include "app-template.fullname" . }}-naming-test
+  namespace: {{ .Release.Namespace }}
