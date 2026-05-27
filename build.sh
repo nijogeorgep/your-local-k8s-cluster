@@ -258,7 +258,76 @@ case "$TARGET" in
             echo -e "\033[1;31m✗ Kargo template failed!\033[0m"
             exit 1
         fi
-        
+
+        echo -e "\n\033[1;33mTesting global naming without flavor...\033[0m"
+        NAMING_OUT=$(helm template svc "$CHART_PATH" \
+            --set nameOverride=service \
+            --set argo-rollouts.enabled=false \
+            --set global.environment=prod \
+            --set global.region=us-west-2 \
+            --show-only templates/deployment.yaml 2>&1)
+        if [[ $? -ne 0 ]]; then
+            echo -e "\033[1;31m✗ Global naming (no flavor) template failed!\033[0m"
+            exit 1
+        fi
+        if ! echo "$NAMING_OUT" | grep -q "name: service-prod-us-west-2"; then
+            echo -e "\033[1;31m✗ Global naming (no flavor): expected 'service-prod-us-west-2' in output\033[0m"
+            echo "$NAMING_OUT" | grep "name:"
+            exit 1
+        fi
+        echo -e "\033[1;32m✓ Global naming without flavor passed (service-prod-us-west-2)\033[0m"
+
+        echo -e "\n\033[1;33mTesting global naming with flavor...\033[0m"
+        NAMING_FLAVOR_OUT=$(helm template svc "$CHART_PATH" \
+            --set nameOverride=service \
+            --set argo-rollouts.enabled=false \
+            --set global.environment=staging \
+            --set global.flavor=qa1 \
+            --set global.region=us-west-2 \
+            --show-only templates/deployment.yaml 2>&1)
+        if [[ $? -ne 0 ]]; then
+            echo -e "\033[1;31m✗ Global naming (with flavor) template failed!\033[0m"
+            exit 1
+        fi
+        if ! echo "$NAMING_FLAVOR_OUT" | grep -q "name: service-staging-qa1-us-west-2"; then
+            echo -e "\033[1;31m✗ Global naming (with flavor): expected 'service-staging-qa1-us-west-2' in output\033[0m"
+            echo "$NAMING_FLAVOR_OUT" | grep "name:"
+            exit 1
+        fi
+        echo -e "\033[1;32m✓ Global naming with flavor passed (service-staging-qa1-us-west-2)\033[0m"
+
+        echo -e "\n\033[1;33mTesting fullnameOverride naming...\033[0m"
+        OVERRIDE_OUT=$(helm template svc "$CHART_PATH" \
+            --set argo-rollouts.enabled=false \
+            --set fullnameOverride=my-explicit-name \
+            --show-only templates/deployment.yaml 2>&1)
+        if [[ $? -ne 0 ]]; then
+            echo -e "\033[1;31m✗ fullnameOverride template failed!\033[0m"
+            exit 1
+        fi
+        if ! echo "$OVERRIDE_OUT" | grep -q "name: my-explicit-name"; then
+            echo -e "\033[1;31m✗ fullnameOverride: expected 'my-explicit-name' in output\033[0m"
+            echo "$OVERRIDE_OUT" | grep "name:"
+            exit 1
+        fi
+        echo -e "\033[1;32m✓ fullnameOverride naming passed (my-explicit-name)\033[0m"
+
+        echo -e "\n\033[1;33mTesting test-naming hook renders in global naming mode...\033[0m"
+        TEST_NAMING_OUT=$(helm template svc "$CHART_PATH" \
+            --set nameOverride=service \
+            --set global.environment=prod \
+            --set global.region=us-west-2 \
+            --show-only templates/tests/test-naming.yaml 2>&1)
+        if [[ $? -ne 0 ]]; then
+            echo -e "\033[1;31m✗ test-naming hook render failed!\033[0m"
+            exit 1
+        fi
+        if ! echo "$TEST_NAMING_OUT" | grep -q "service-prod-us-west-2"; then
+            echo -e "\033[1;31m✗ test-naming hook: expected 'service-prod-us-west-2' in rendered test\033[0m"
+            exit 1
+        fi
+        echo -e "\033[1;32m✓ test-naming hook renders correctly\033[0m"
+
         echo -e "\n\033[1;32m✓ All template tests passed!\033[0m"
         ;;
     
