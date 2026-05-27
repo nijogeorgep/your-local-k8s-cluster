@@ -5,6 +5,16 @@
 nameOverride: ""
 fullnameOverride: ""
 
+# Deployment naming components (global — shared with all subcharts)
+# When all three are set, every resource name becomes: <service>-<environment>-<flavor>-<region>
+# e.g. nameOverride=payments, global.environment=prod, global.flavor=blue, global.region=us-east
+# → payments-prod-blue-us-east  (Deployment, Service, HPA, Rollout, VirtualService, …)
+# Leave empty to fall back to the standard Helm release-name logic.
+global:
+  environment: ""  # e.g. dev, staging, prod
+  flavor: ""       # e.g. blue, green, canary
+  region: ""       # e.g. us-east, eu-west
+
 # Image configuration
 image:
   repository: nginx

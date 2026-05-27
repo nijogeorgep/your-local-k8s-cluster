@@ -7,10 +7,17 @@ Expand the name of the chart.
 
 {{/*
 Create a default fully qualified app name.
+Priority:
+  1. fullnameOverride — used as-is
+  2. global.environment + global.flavor + global.region all set — <service>-<env>-<flavor>-<region>
+  3. Standard Helm logic — <release>[-<chart>] (chart suffix dropped when release already contains it)
 */}}
 {{- define "app-template.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else if and .Values.global.environment .Values.global.flavor .Values.global.region }}
+{{- $svc := default .Release.Name .Values.nameOverride }}
+{{- printf "%s-%s-%s-%s" $svc .Values.global.environment .Values.global.flavor .Values.global.region | trunc 63 | trimSuffix "-" }}
 {{- else }}
 {{- $name := default .Chart.Name .Values.nameOverride }}
 {{- if contains $name .Release.Name }}

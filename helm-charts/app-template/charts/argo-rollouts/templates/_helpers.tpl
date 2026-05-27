@@ -51,11 +51,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Get the parent chart's fullname
-This helper is used to reference services and other resources from the parent chart
+Get the parent chart's fullname.
+Priority:
+  1. global.environment + global.flavor + global.region all set — <service>-<env>-<flavor>-<region>
+  2. parentFullname explicit override
+  3. Release.Name fallback
+This helper is used to name the Rollout and all related test resources.
 */}}
 {{- define "argo-rollouts.parentFullname" -}}
-{{- if .Values.parentFullname -}}
+{{- if and .Values.global.environment .Values.global.flavor .Values.global.region }}
+{{- $svc := default .Release.Name .Values.nameOverride }}
+{{- printf "%s-%s-%s-%s" $svc .Values.global.environment .Values.global.flavor .Values.global.region | trunc 63 | trimSuffix "-" }}
+{{- else if .Values.parentFullname -}}
 {{- .Values.parentFullname -}}
 {{- else -}}
 {{- .Release.Name -}}
