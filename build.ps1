@@ -15,6 +15,24 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Require PowerShell 7+
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Host "ERROR: PowerShell 7 or higher is required. Current version: $($PSVersionTable.PSVersion)" -ForegroundColor Red
+    Write-Host "Install PowerShell 7: https://aka.ms/powershell" -ForegroundColor Yellow
+
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        $answer = Read-Host "Upgrade PowerShell now using winget? (yes/no)"
+        if ($answer -eq "yes") {
+            Write-Host "Upgrading PowerShell via winget..." -ForegroundColor Cyan
+            winget install --id Microsoft.PowerShell --source winget --accept-package-agreements --accept-source-agreements
+            Write-Host "Upgrade complete. Please restart your terminal and re-run this script." -ForegroundColor Green
+        }
+    } else {
+        Write-Host "winget not found. Install winget or download PowerShell manually." -ForegroundColor Yellow
+    }
+    exit 1
+}
+
 function Show-Help {
     Write-Host @"
 My Local Kubernetes Cluster - Available targets:
