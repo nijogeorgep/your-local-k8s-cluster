@@ -1,0 +1,55 @@
+# Example OpenTelemetryCollector — deployment mode
+# Receives OTLP traces, metrics, and logs; exports to stdout (debug exporter)
+#
+# Prerequisites:
+#   - OpenTelemetry Operator installed (scripts/windows/install-otel-operator.ps1)
+#
+# Deploy:  kubectl apply -f manifests/examples/otel-collector.yaml
+# Delete:  kubectl delete -f manifests/examples/otel-collector.yaml
+# Logs:    kubectl logs -l app.kubernetes.io/component=opentelemetry-collector -n default
+---
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-collector
+  namespace: default
+spec:
+  # mode: deployment | daemonset | statefulset | sidecar
+  mode: deployment
+  image: otel/opentelemetry-collector-k8s:latest
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 75
+        spike_limit_percentage: 15
+
+    exporters:
+      debug:
+        verbosity: detailed
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [debug]

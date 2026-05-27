@@ -63,6 +63,18 @@ if ($namespaces.items.metadata.name -contains "kubernetes-dashboard") {
     Write-Host ""
 }
 
+if ($namespaces.items.metadata.name -contains "opentelemetry-operator") {
+    $installedComponents += "✓ OpenTelemetry Operator"
+    Write-Host "  ✓ OpenTelemetry Operator" -ForegroundColor Green
+    kubectl get pods -n opentelemetry-operator
+    $collectors = kubectl get opentelemetrycollectors -A --ignore-not-found=true 2>$null
+    if ($collectors) {
+        Write-Host "  Collectors:" -ForegroundColor DarkGray
+        kubectl get opentelemetrycollectors -A
+    }
+    Write-Host ""
+}
+
 if ($installedComponents.Count -eq 0) {
     Write-Host "  No additional components installed yet." -ForegroundColor Yellow
     Write-Host "  Run .\scripts\install-all.ps1 to install tools." -ForegroundColor Cyan

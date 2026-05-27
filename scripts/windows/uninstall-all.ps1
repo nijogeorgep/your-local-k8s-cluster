@@ -15,6 +15,11 @@ if (-not $Force) {
     }
 }
 
+# Uninstall OpenTelemetry Operator
+Write-Host "Uninstalling OpenTelemetry Operator..." -ForegroundColor Yellow
+helm uninstall opentelemetry-operator -n opentelemetry-operator 2>$null
+kubectl delete namespace opentelemetry-operator 2>$null
+
 # Uninstall Dashboard
 Write-Host "`nUninstalling Kubernetes Dashboard..." -ForegroundColor Yellow
 kubectl delete namespace kubernetes-dashboard 2>$null

@@ -8,6 +8,7 @@ param(
     [switch]$SkipArgoRollouts,
     [switch]$SkipKargo,
     [switch]$SkipDashboard,
+    [switch]$SkipOtelOperator,
     [switch]$NonInteractive
 )
 
@@ -18,7 +19,8 @@ Write-Host @"
 ╔═══════════════════════════════════════════════╗
 ║   Local Kubernetes Cluster Setup             ║
 ║   Installing: cert-manager, Istio, ArgoCD,   ║
-║              Argo Rollouts, Kargo, Dashboard  ║
+║   Argo Rollouts, Kargo, Dashboard,           ║
+║   OpenTelemetry Operator                     ║
 ╚═══════════════════════════════════════════════╝
 "@ -ForegroundColor Cyan
 
@@ -57,6 +59,7 @@ if (-not $SkipArgoCD) { $tools += @{Name="ArgoCD"; Script="$PSScriptRoot\install
 if (-not $SkipArgoRollouts) { $tools += @{Name="Argo Rollouts"; Script="$PSScriptRoot\install-argo-rollouts.ps1"} }
 if (-not $SkipKargo) { $tools += @{Name="Kargo"; Script="$PSScriptRoot\install-kargo.ps1"} }
 if (-not $SkipDashboard) { $tools += @{Name="Kubernetes Dashboard"; Script="$PSScriptRoot\install-dashboard.ps1"} }
+if (-not $SkipOtelOperator) { $tools += @{Name="OpenTelemetry Operator"; Script="$PSScriptRoot\install-otel-operator.ps1"} }
 
 $totalTools = $tools.Count
 $current = 0

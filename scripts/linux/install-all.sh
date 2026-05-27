@@ -10,6 +10,7 @@ SKIP_ARGOCD=false
 SKIP_ARGO_ROLLOUTS=false
 SKIP_KARGO=false
 SKIP_DASHBOARD=false
+SKIP_OTEL_OPERATOR=false
 NON_INTERACTIVE=false
 
 while [[ $# -gt 0 ]]; do
@@ -20,6 +21,7 @@ while [[ $# -gt 0 ]]; do
         --skip-argo-rollouts) SKIP_ARGO_ROLLOUTS=true; shift ;;
         --skip-kargo) SKIP_KARGO=true; shift ;;
         --skip-dashboard) SKIP_DASHBOARD=true; shift ;;
+        --skip-otel-operator) SKIP_OTEL_OPERATOR=true; shift ;;
         --non-interactive) NON_INTERACTIVE=true; shift ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
@@ -31,7 +33,8 @@ cat << "EOF"
 ╔═══════════════════════════════════════════════╗
 ║   Local Kubernetes Cluster Setup             ║
 ║   Installing: cert-manager, Istio, ArgoCD,   ║
-║              Argo Rollouts, Kargo, Dashboard  ║
+║   Argo Rollouts, Kargo, Dashboard,           ║
+║   OpenTelemetry Operator                     ║
 ╚═══════════════════════════════════════════════╝
 EOF
 
@@ -70,50 +73,58 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Install cert-manager
 if [[ "$SKIP_CERT_MANAGER" == "false" ]]; then
-    echo -e "\033[1;36m[1/6] Installing cert-manager...\033[0m"
+    echo -e "\033[1;36m[1/7] Installing cert-manager...\033[0m"
     bash "$SCRIPT_DIR/install-cert-manager.sh"
 else
-    echo -e "\033[1;33m[1/6] Skipping cert-manager\033[0m"
+    echo -e "\033[1;33m[1/7] Skipping cert-manager\033[0m"
 fi
 
 # Install Istio
 if [[ "$SKIP_ISTIO" == "false" ]]; then
-    echo -e "\n\033[1;36m[2/6] Installing Istio...\033[0m"
+    echo -e "\n\033[1;36m[2/7] Installing Istio...\033[0m"
     bash "$SCRIPT_DIR/install-istio.sh"
 else
-    echo -e "\033[1;33m[2/6] Skipping Istio\033[0m"
+    echo -e "\033[1;33m[2/7] Skipping Istio\033[0m"
 fi
 
 # Install ArgoCD
 if [[ "$SKIP_ARGOCD" == "false" ]]; then
-    echo -e "\n\033[1;36m[3/6] Installing ArgoCD...\033[0m"
+    echo -e "\n\033[1;36m[3/7] Installing ArgoCD...\033[0m"
     bash "$SCRIPT_DIR/install-argocd.sh"
 else
-    echo -e "\033[1;33m[3/6] Skipping ArgoCD\033[0m"
+    echo -e "\033[1;33m[3/7] Skipping ArgoCD\033[0m"
 fi
 
 # Install Argo Rollouts
 if [[ "$SKIP_ARGO_ROLLOUTS" == "false" ]]; then
-    echo -e "\n\033[1;36m[4/6] Installing Argo Rollouts...\033[0m"
+    echo -e "\n\033[1;36m[4/7] Installing Argo Rollouts...\033[0m"
     bash "$SCRIPT_DIR/install-argo-rollouts.sh"
 else
-    echo -e "\033[1;33m[4/6] Skipping Argo Rollouts\033[0m"
+    echo -e "\033[1;33m[4/7] Skipping Argo Rollouts\033[0m"
 fi
 
 # Install Kargo
 if [[ "$SKIP_KARGO" == "false" ]]; then
-    echo -e "\n\033[1;36m[5/6] Installing Kargo...\033[0m"
+    echo -e "\n\033[1;36m[5/7] Installing Kargo...\033[0m"
     bash "$SCRIPT_DIR/install-kargo.sh"
 else
-    echo -e "\033[1;33m[5/6] Skipping Kargo\033[0m"
+    echo -e "\033[1;33m[5/7] Skipping Kargo\033[0m"
 fi
 
 # Install Dashboard
 if [[ "$SKIP_DASHBOARD" == "false" ]]; then
-    echo -e "\n\033[1;36m[6/6] Installing Kubernetes Dashboard...\033[0m"
+    echo -e "\n\033[1;36m[6/7] Installing Kubernetes Dashboard...\033[0m"
     bash "$SCRIPT_DIR/install-dashboard.sh"
 else
-    echo -e "\033[1;33m[6/6] Skipping Kubernetes Dashboard\033[0m"
+    echo -e "\033[1;33m[6/7] Skipping Kubernetes Dashboard\033[0m"
+fi
+
+# Install OpenTelemetry Operator
+if [[ "$SKIP_OTEL_OPERATOR" == "false" ]]; then
+    echo -e "\n\033[1;36m[7/7] Installing OpenTelemetry Operator...\033[0m"
+    bash "$SCRIPT_DIR/install-otel-operator.sh"
+else
+    echo -e "\033[1;33m[7/7] Skipping OpenTelemetry Operator\033[0m"
 fi
 
 # Setup infrastructure

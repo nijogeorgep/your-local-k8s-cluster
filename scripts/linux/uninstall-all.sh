@@ -20,6 +20,11 @@ if [[ "$FORCE" != "true" ]]; then
     fi
 fi
 
+# Uninstall OpenTelemetry Operator
+echo -e "\033[1;33mUninstalling OpenTelemetry Operator...\033[0m"
+helm uninstall opentelemetry-operator -n opentelemetry-operator 2>/dev/null || true
+kubectl delete namespace opentelemetry-operator 2>/dev/null || true
+
 # Uninstall Dashboard
 echo -e "\n\033[1;33mUninstalling Kubernetes Dashboard...\033[0m"
 kubectl delete namespace kubernetes-dashboard 2>/dev/null

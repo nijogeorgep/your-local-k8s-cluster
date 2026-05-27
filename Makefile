@@ -2,7 +2,8 @@
 # Requires: Make for Windows (choco install make) or WSL
 
 .PHONY: help install install-quiet verify uninstall clean create-cluster delete-cluster status \
-        helm-lint helm-template helm-test helm-package helm-verify helm-build
+        helm-lint helm-template helm-test helm-package helm-verify helm-build \
+        install-otel-operator
 
 # Default target
 help:
@@ -24,6 +25,7 @@ help:
 	@echo "  make install-rollouts"
 	@echo "  make install-kargo"
 	@echo "  make install-dashboard"
+	@echo "  make install-otel-operator"
 	@echo ""
 	@echo "Access UIs:"
 	@echo "  make dashboard        - Start kubectl proxy for dashboard access"
@@ -63,6 +65,9 @@ install-kargo:
 
 install-dashboard:
 	@pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-dashboard.ps1
+
+install-otel-operator:
+	@pwsh -NoProfile -ExecutionPolicy Bypass -File ./scripts/windows/install-otel-operator.ps1
 
 # Verification and status
 verify:

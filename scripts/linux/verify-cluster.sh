@@ -62,6 +62,18 @@ if echo "$NAMESPACES" | jq -r '.items[].metadata.name' | grep -q "^kubernetes-da
     echo ""
 fi
 
+# OpenTelemetry Operator
+if echo "$NAMESPACES" | jq -r '.items[].metadata.name' | grep -q "^opentelemetry-operator$"; then
+    echo -e "  \033[1;32m✓ OpenTelemetry Operator\033[0m"
+    kubectl get pods -n opentelemetry-operator
+    COLLECTORS=$(kubectl get opentelemetrycollectors -A --ignore-not-found=true 2>/dev/null)
+    if [[ -n "$COLLECTORS" ]]; then
+        echo -e "  Collectors:"
+        kubectl get opentelemetrycollectors -A
+    fi
+    echo ""
+fi
+
 # Summary
 echo -e "\n\033[1;36m═══════════════════════════════════════════════\033[0m"
 echo -e "\033[1;32mCluster verification complete!\033[0m"

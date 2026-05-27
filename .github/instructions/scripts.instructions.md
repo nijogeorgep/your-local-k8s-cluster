@@ -48,4 +48,5 @@ kubectl wait --for=condition=Ready pods --all -n <ns> --timeout=300s
 | `kargo` | Kargo |
 | `kubernetes-dashboard` | Dashboard |
 | `cert-manager` | cert-manager |
+| `opentelemetry-operator` | OpenTelemetry Operator |
 | `default` | App workloads (sidecar injection enabled) |
