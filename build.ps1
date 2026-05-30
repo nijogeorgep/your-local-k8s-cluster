@@ -4,10 +4,10 @@
 
 param(
     [Parameter(Position=0)]
-    [ValidateSet('help', 'install', 'install-quiet', 'verify', 'status', 'uninstall', 'clean', 
+    [ValidateSet('help', 'install', 'install-quiet', 'verify', 'status', 'uninstall', 'clean',
                  'create-cluster', 'delete-cluster', 'setup', 'teardown',
                  'install-istio', 'install-argocd', 'install-rollouts', 'install-kargo', 'install-dashboard',
-                 'install-cert-manager', 'setup-infrastructure',
+                 'install-cert-manager', 'install-otel-operator', 'setup-infrastructure',
                  'dashboard', 'argocd-ui', 'kargo-ui', 'rollouts-ui', 'expose-gateway',
                  'helm-lint', 'helm-template', 'helm-test', 'helm-package', 'helm-verify', 'helm-build')]
     [string]$Target = 'help'
@@ -53,6 +53,7 @@ Component-specific installs:
   .\build.ps1 install-rollouts
   .\build.ps1 install-kargo
   .\build.ps1 install-dashboard
+  .\build.ps1 install-otel-operator
 
 Access UIs:
   .\build.ps1 dashboard        - Start kubectl proxy for dashboard access
@@ -109,6 +110,9 @@ switch ($Target) {
     }
     'install-dashboard' {
         & "$PSScriptRoot\scripts\windows\install-dashboard.ps1"
+    }
+    'install-otel-operator' {
+        & "$PSScriptRoot\scripts\windows\install-otel-operator.ps1"
     }
     'verify' {
         & "$PSScriptRoot\scripts\windows\verify-cluster.ps1"

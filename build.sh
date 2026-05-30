@@ -27,6 +27,7 @@ Component-specific installs:
   ./build.sh install-rollouts
   ./build.sh install-kargo
   ./build.sh install-dashboard
+  ./build.sh install-otel-operator
 
 Access UIs:
   ./build.sh dashboard        - Start kubectl proxy for dashboard access
@@ -93,7 +94,11 @@ case "$TARGET" in
     install-dashboard)
         bash "$SCRIPT_DIR/scripts/linux/install-dashboard.sh"
         ;;
-    
+
+    install-otel-operator)
+        bash "$SCRIPT_DIR/scripts/linux/install-otel-operator.sh"
+        ;;
+
     verify|status)
         bash "$SCRIPT_DIR/scripts/linux/verify-cluster.sh"
         ;;
